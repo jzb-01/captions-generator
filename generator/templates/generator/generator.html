@@ -1,0 +1,76 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Caption Editor</title>
+    <link rel="stylesheet" href="{% static 'generator/css/generator.css' %}">
+    <script type="module" src="{% static 'generator/js/generator.js' %}" defer></script>
+</head>
+<body>
+    <div class="upload-screen" id="upload-screen">
+        <label class="upload-label" id="label-box" for="video-input">
+            <p>Upload a video!</p>
+        </label>
+        <input class="hidden" id="video-input" type="file" accept="video/*">
+    </div>    
+
+    <main class="editor-screen hidden" id="editor-screen">
+        <div class="editor-main-layout">
+            <div class="main-content">
+                <section class="video-container">
+                    <video class="video-player" id="video-player" controls></video>
+                </section>
+                
+                <section class="editor-controls">
+                    <textarea class="text-editor" id="text-editor" placeholder="Write caption here..."></textarea>
+                    
+                    <div class="time-inputs">
+                        <label>Start (H:M:S):</label>
+                        <input type="number" id="start-h" placeholder="HH" min="0">
+                        <input type="number" id="start-m" placeholder="MM" min="0" max="59">
+                        <input type="number" id="start-s" placeholder="SS" min="0" max="59">
+                    </div>
+
+                    <div class="time-inputs">
+                        <label>End (H:M:S):</label>
+                        <input type="number" id="end-h" placeholder="HH" min="0">
+                        <input type="number" id="end-m" placeholder="MM" min="0" max="59">
+                        <input type="number" id="end-s" placeholder="SS" min="0" max="59">
+                    </div>
+
+                    <button type="button" id="save-cue">Save!</button>
+
+                    <button type="button" id="new-cue">New cue!</button>
+                    
+                    <button type="button" id="toggle-sidebar">View Cues</button>
+
+                    <button type="button" id="create-file">Create File</button>
+                </section>
+            </div>
+            <aside class="cue-sidebar" id="cue-sidebar">
+                <h3>Cues List</h3>
+                <div id="cards-container">
+                    {% for cue in track %}
+                        <div class="cue-preview-card" data-id="{{ cue.id }}">
+                            <div class="card-header">
+                                <div class="cue-time-info">
+                                    <span class="time-tag">{{ cue.start_time }}</span> 
+                                    <span>→</span> 
+                                    <span class="time-tag">{{ cue.end_time }}</span>
+                                </div>
+                                <button class="delete-cue-btn" title="Delete cue">&times;</button>
+                            </div>
+                            <p class="cue-text-preview">{{ cue.text|truncatechars:30 }}</p>
+                        </div>
+                    {% empty %}
+                        <p style="padding: 10px; color: #666;">No cues yet!</p>
+                    {% endfor %}
+                </div>
+            </aside>
+        </div>
+    </main>
+    {{ context|json_script:"track-data" }}
+</body>
+</html>
