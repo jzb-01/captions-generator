@@ -132,11 +132,6 @@ button:hover {
     color: #000;
 }
 
-#save-cue {
-    background: var(--accent);
-    color: #000;
-    font-weight: 600;
-}
 
 /* Sidebar */
 .cue-sidebar {
@@ -150,7 +145,7 @@ button:hover {
     margin-top: 0;
 }
 
-.cue-preview-card {
+.cue-card {
     background: var(--panel-2);
     border-radius: 10px;
     padding: 10px;
@@ -159,12 +154,12 @@ button:hover {
     transition: 0.2s;
 }
 
-.cue-preview-card:hover {
+.cue-card:hover {
     transform: translateY(-2px);
     border: 1px solid var(--accent);
 }
 
-.cue-preview-card.selected {
+.cue-card.selected {
     border: 1px solid var(--accent);
     background: rgba(106,169,255,0.1);
 }
@@ -195,4 +190,10 @@ button:hover {
 
 .hidden {
     display: none;
+}
+
+.ui-disabled {
+    pointer-events: none;
+    opacity: 0.6;
+    filter: grayscale(0.5);
 }

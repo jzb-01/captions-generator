@@ -18,12 +18,14 @@ def set_interface (request):
 
 @api_view(['POST'])
 def add_cue(request):
+    print(request.data['start_time'], request.data['end_time'], request.data['start_seconds'], request.data['end_seconds'])
     serializer = temporary_table_serializer(data=request.data)
     if serializer.is_valid():
         author_id = request.session.session_key
         new_cue = serializer.save(author_id = author_id)
-        return Response(new_cue.id, status=201)
+        return Response({'id': new_cue.id}, status=201)
     else:
+        print("SERIALIZER ERRORS:", serializer.errors)
         return Response(serializer.errors, status=400)
     
     
@@ -60,6 +62,6 @@ def format_file(request):
     file_content = "WEBVTT\n\n"
     for index, cue in enumerate(author_track):
         file_content += f"{index + 1}\n"
-        file_content += f"{cue.start_seconds} --> {cue.end_seconds}\n"
+        file_content += f"{int(cue.start_seconds // 3600):02d}:{int((cue.start_seconds % 3600) // 60):02d}:{cue.start_seconds % 60:06.3f} --> {int(cue.end_seconds // 3600):02d}:{int((cue.end_seconds % 3600) // 60):02d}:{cue.end_seconds % 60:06.3f}\n"
         file_content += f"{cue.text}\n\n"
     return Response(file_content, status=200)
