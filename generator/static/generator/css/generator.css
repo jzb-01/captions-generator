@@ -57,8 +57,9 @@ body {
 }
 
 .main-content {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-rows: 55vh 1fr;
+    height: 100%;
     padding: 16px;
     gap: 12px;
 }
@@ -67,7 +68,8 @@ body {
     background: black;
     border-radius: 12px;
     overflow: hidden;
-    flex: 1;
+    height: 100%; 
+    width: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -76,6 +78,7 @@ body {
 .video-player {
     width: 100%;
     height: 100%;
+    object-fit: contain; 
 }
 
 /* Controls */

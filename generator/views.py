@@ -18,14 +18,12 @@ def set_interface (request):
 
 @api_view(['POST'])
 def add_cue(request):
-    print(request.data['start_time'], request.data['end_time'], request.data['start_seconds'], request.data['end_seconds'])
     serializer = temporary_table_serializer(data=request.data)
     if serializer.is_valid():
         author_id = request.session.session_key
         new_cue = serializer.save(author_id = author_id)
         return Response({'id': new_cue.id}, status=201)
     else:
-        print("SERIALIZER ERRORS:", serializer.errors)
         return Response(serializer.errors, status=400)
     
     

@@ -10,7 +10,6 @@ const video = document.getElementById('video-player');
 const track = video.textTracks[0];
 const saveCueButton = document.getElementById('save-cue');
 const addCueButton = document.getElementById('new-cue');
-const toggleButton = document.getElementById('toggle-sidebar');
 const createFileButton = document.getElementById('create-file');
 const startHours = document.getElementById('start-h');
 const startMinutes = document.getElementById('start-m');
@@ -51,35 +50,20 @@ function inputHandler (event) {
     }
     const file = files[0];
     if ((file.type).startsWith("video/")) {
-        console.log("its a video");
         const videoURL = URL.createObjectURL(file);
         video.src = videoURL;
 
         uploadScreen.classList.remove("upload-screen");
         uploadScreen.classList.add("hidden");
-        
         editorScreen.classList.remove("hidden");
-
     }
     else {
-        console.log(`its not a video but a ${file.type}`);
         alert("The file must be a video");
     }
-    console.log(file.name, file.size, file.type, file);
-
 }
 
 videoInput.addEventListener("change", inputHandler);
 labelBox.addEventListener("drop", inputHandler);
-
-toggleButton.addEventListener('click', () => {
-        sidebar.classList.toggle('hidden');
-        if (sidebar.classList.contains('hidden')) {
-            toggleButton.textContent = "Close List";
-        } else {
-            toggleButton.textContent = "View Cues";
-        }
-    });
 
 document.addEventListener('DOMContentLoaded', () => {
     editorScreen.classList.add('ui-disabled');
@@ -336,6 +320,26 @@ async function deleteCue (pk) {
     throw new Error("Cue couldn't be deleted");
 }
 
+function toastSuccess(message) {
+    Toastify({
+        text: message,
+        duration: 3000,
+        gravity: "bottom",
+        position: "right",
+        style: { background: "#4CAF50" }
+    }).showToast();
+}
+
+function toastError(message) {
+    Toastify({
+        text: `Error: ${message}`,
+        duration: 4000,
+        gravity: "bottom",
+        position: "right",
+        style: { background: "#F44336" }
+    }).showToast();
+}
+
 //////////////////////////////////////////////////////////
 //App core
 //////////////////////////////////////////////////////////
@@ -345,10 +349,11 @@ saveCueButton.addEventListener('click', async () => {
     try {
         await saveCue();
     } catch(error) {
-        console.log(error);
+        toastError(error.message);
         editorScreen.classList.remove('ui-disabled');
         return;
     }
+    toastSuccess("You saved a cue!")
     sortCuesRecord();
     buildTrack();
     buildCards();
@@ -363,10 +368,11 @@ addCueButton.addEventListener('click', async () => {
         }
         await addCue();
     } catch(error) {
-        console.log(error);
+        toastError(error.message);
         editorScreen.classList.remove('ui-disabled');
         return;
     }
+    toastSuccess("You added a cue!");
     sortCuesRecord();
     buildTrack();
     buildCards();
@@ -383,10 +389,11 @@ cardsContainer.addEventListener("click", async (event) => {
         try {
             await deleteCue(id);
         } catch(error) {
-            console.log(error);
+            toastError(error.message);
             editorScreen.classList.remove('ui-disabled');
             return;
         }
+        toastSuccess("You deleted a cue!");
         buildTrack();
         buildCards();
         updateEditor();
@@ -423,9 +430,10 @@ createFileButton.addEventListener('click', async () => {
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(link.href);
+        toastSuccess("Enjoy your VTT!");
         return;
     }
-    console.log("File couldn't be downloaded")
+    toastError("File couldn't be downloaded");
 });
 
 
