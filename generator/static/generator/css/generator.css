@@ -20,7 +20,6 @@ body {
     color: var(--text);
 }
 
-/* Upload screen */
 .upload-screen {
     height: 100vh;
     display: flex;
@@ -43,7 +42,6 @@ body {
     transform: scale(1.02);
 }
 
-/* Editor layout */
 .editor-screen {
     height: 100vh;
     display: flex;
@@ -81,7 +79,6 @@ body {
     object-fit: contain; 
 }
 
-/* Controls */
 .editor-controls {
     background: var(--panel);
     padding: 12px;
@@ -135,8 +132,6 @@ button:hover {
     color: #000;
 }
 
-
-/* Sidebar */
 .cue-sidebar {
     background: var(--panel);
     border-left: 1px solid var(--border);
