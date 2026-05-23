@@ -4,8 +4,8 @@ class TemporaryTrack(models.Model):
     text = models.CharField(max_length=300, blank=True)
     start_time = models.CharField(max_length=12)
     end_time = models.CharField(max_length=12)
-    start_seconds = models.IntegerField()
-    end_seconds = models.IntegerField()
+    start_seconds = models.FloatField()
+    end_seconds = models.FloatField()
     author_id = models.CharField(max_length=100)
     last_active = models.DateTimeField(auto_now=True)
 
