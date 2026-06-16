@@ -67,7 +67,24 @@
                             <p class="cue-text-preview">{{ cue.text|truncatechars:30 }}</p>
                         </div>
                     {% empty %}
-                        <p style="padding: 10px; color: #666;">No cues yet!</p>
+                        <div class="instructions-card">
+                            <h4>Getting Started</h4>
+
+                            <ol>
+                                <li>Move the playhead to where a subtitle should begin.</li>
+                                <li>Click <strong>Add Cue!</strong> to create a new subtitle.</li>
+                                <li>Write the subtitle text in the editor.</li>
+                                <li>Adjust the start and end times if needed.</li>
+                                <li>Click <strong>Save!</strong> to store your changes.</li>
+                                <li>Select any cue in the sidebar to edit it later.</li>
+                                <li>Click the × button to remove a subtitle.</li>
+                                <li>When finished, click <strong>Create VTT File!</strong>.</li>
+                            </ol>
+
+                            <p class="instructions-tip">
+                                Tip: New cues are automatically created at the video's current position and last 5 seconds by default.
+                            </p>
+                        </div>
                     {% endfor %}
                 </div>
             </aside>
