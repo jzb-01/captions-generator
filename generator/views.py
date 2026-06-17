@@ -1,53 +1,33 @@
 from django.shortcuts import render
-from .models import TemporaryTrack
-from .serializers import temporary_table_serializer
-from django.contrib.sessions.models import Session
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-import uuid
+
+from .models import TemporaryTrack
+from .serializers import temporary_table_serializer
+
+
+# ------------------------------------------------------
+# Helpers
+# ------------------------------------------------------
+
+def get_or_create_session_key(request):
+    """
+    Ensures session_key always exists.
+    Django only assigns session_key after session is saved/created.
+    """
+    if not request.session.session_key:
+        request.session.create()
+    return request.session.session_key
+
+
+# ------------------------------------------------------
+# UI View
+# ------------------------------------------------------
 
 def set_interface(request):
+    session_key = get_or_create_session_key(request)
 
-    request_id = uuid.uuid4().hex[:8]
-
-    print("METHOD:", request.method)
-
-    if request.method != "GET":
-        print("IGNORING NON-GET REQUEST")
-    if request.headers.get("User-Agent", "").startswith("Mozilla"):
-        print("***** REAL BROWSER REQUEST *****")
-
-    print(f"\n========== OLD PRINT SET_INTERFACE [{request_id}] ==========")
-
-    print("USER AGENT:", request.headers.get("User-Agent"))
-    print("HOST:", request.get_host())
-    print("COOKIE SESSIONID:", request.COOKIES.get("sessionid"))
-    print("SESSION KEY BEFORE:", request.session.session_key)
-
-    print("\n========== NEW PRINT SET_INTERFACE ==========")
-    print("METHOD:", request.method)
-    print("USER AGENT:", request.headers.get("User-Agent"))
-    print("COOKIE SESSIONID:", request.COOKIES.get("sessionid"))
-
-    if not request.session.session_key:
-        print("CREATING SESSION...")
-        request.session.create()
-        request.session.modified = True
-
-    print("SESSION KEY AFTER:", request.session.session_key)
-
-    session_exists = Session.objects.filter(
-        session_key=request.session.session_key
-    ).exists()
-
-    print("SESSION ROW EXISTS:", session_exists)
-    print("SESSION COUNT:", Session.objects.count())
-
-    track = TemporaryTrack.objects.filter(
-        author_id=request.session.session_key
-    )
-
-    print("TRACK COUNT:", track.count())
+    track = TemporaryTrack.objects.filter(author_id=session_key)
 
     track_data = list(
         track.values(
@@ -59,10 +39,8 @@ def set_interface(request):
             "text",
         )
     )
-    print("SESSION MODIFIED:", request.session.modified)
-    print("SESSION IS EMPTY:", request.session.is_empty())
 
-    response = render(
+    return render(
         request,
         "generator/generator.html",
         {
@@ -71,148 +49,95 @@ def set_interface(request):
         },
     )
 
-    print("RESPONSE COOKIES:", response.cookies)
-    print(f"========== END SET_INTERFACE [{request_id}] ==========\n")
 
-    return response
-
-
-from django.contrib.sessions.models import Session
-import uuid
+# ------------------------------------------------------
+# CREATE CUE
+# ------------------------------------------------------
 
 @api_view(["POST"])
 def add_cue(request):
-
-    request_id = uuid.uuid4().hex[:8]
-
-    print("SESSION COOKIE:", request.COOKIES.get("sessionid"))
-    print("SESSION KEY BEFORE:", request.session.session_key)
-    print("SESSION EXISTS IN DB:", Session.objects.filter(session_key=request.COOKIES.get("sessionid")).exists())
-
-    print(f"\n========== ADD_CUE [{request_id}] ==========")
-
-    cookie_session = request.COOKIES.get("sessionid")
-
-    print("USER AGENT:", request.headers.get("User-Agent"))
-    print("HOST:", request.get_host())
-
-    print("COOKIE SESSIONID:", cookie_session)
-    print("SESSION KEY:", request.session.session_key)
-    print("SESSION DATA:", dict(request.session))
-
-    print(
-        "ALL SESSION KEYS IN DB:",
-        list(
-            Session.objects.values_list(
-                "session_key",
-                flat=True
-            )[:20]
-        )
-    )
-
-    if cookie_session:
-
-        cookie_session_exists = Session.objects.filter(
-            session_key=cookie_session
-        ).exists()
-
-        print(
-            "COOKIE SESSION EXISTS IN DB:",
-            cookie_session_exists
-        )
-
-    else:
-        print("NO SESSION COOKIE RECEIVED")
-
-    print("TOTAL SESSION ROWS:", Session.objects.count())
+    session_key = get_or_create_session_key(request)
 
     try:
+        serializer = temporary_table_serializer(data=request.data)
 
-        serializer = temporary_table_serializer(
-            data=request.data
-        )
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
 
-        print("SERIALIZER VALID:", serializer.is_valid())
+        new_cue = serializer.save(author_id=session_key)
 
-        if serializer.is_valid():
-
-            author_id = request.session.session_key
-
-            print("AUTHOR ID:", author_id)
-
-            new_cue = serializer.save(
-                author_id=author_id
-            )
-
-            print("NEW CUE CREATED:", new_cue.id)
-
-            print(f"========== END ADD_CUE [{request_id}] ==========\n")
-
-            return Response(
-                {"id": new_cue.id},
-                status=201
-            )
-
-        print("SERIALIZER ERRORS:", serializer.errors)
-
-        print(f"========== END ADD_CUE [{request_id}] ==========\n")
-
-        return Response(
-            serializer.errors,
-            status=400
-        )
+        return Response({"id": new_cue.id}, status=201)
 
     except Exception as e:
-
         print("ADD_CUE ERROR:", repr(e))
+        return Response({"error": "internal error"}, status=500)
 
-        print(
-            "SESSION EXISTS AT CRASH:",
-            Session.objects.filter(
-                session_key=cookie_session
-            ).exists()
-            if cookie_session
-            else False
-        )
 
-        print(f"========== END ADD_CUE [{request_id}] ==========\n")
+# ------------------------------------------------------
+# UPDATE CUE
+# ------------------------------------------------------
 
-        raise
-    
-    
-@api_view(['PATCH'])
+@api_view(["PATCH"])
 def save_cue(request, pk):
+    session_key = get_or_create_session_key(request)
+
     try:
-        row = TemporaryTrack.objects.get(pk=pk, author_id = request.session.session_key)
+        row = TemporaryTrack.objects.get(pk=pk, author_id=session_key)
     except TemporaryTrack.DoesNotExist:
         return Response(status=404)
+
     serializer = temporary_table_serializer(
-        instance=row, 
+        instance=row,
         data=request.data,
-        partial = True
+        partial=True,
     )
+
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data, status=200)
-    return Response(serializer.errors, status=400)
-    
 
-@api_view(['DELETE'])
+    return Response(serializer.errors, status=400)
+
+
+# ------------------------------------------------------
+# DELETE CUE
+# ------------------------------------------------------
+
+@api_view(["DELETE"])
 def delete_cue(request, pk):
+    session_key = get_or_create_session_key(request)
+
     try:
-        row = TemporaryTrack.objects.get(pk = pk, author_id = request.session.session_key)
+        row = TemporaryTrack.objects.get(pk=pk, author_id=session_key)
         row.delete()
     except TemporaryTrack.DoesNotExist:
         return Response(status=404)
-    return Response(status=200)
-    
 
-@api_view(['GET'])
+    return Response(status=200)
+
+
+# ------------------------------------------------------
+# EXPORT FILE
+# ------------------------------------------------------
+
+@api_view(["GET"])
 def format_file(request):
-    author_track = TemporaryTrack.objects.filter(author_id = request.session.session_key)
+    session_key = get_or_create_session_key(request)
+
+    author_track = TemporaryTrack.objects.filter(author_id=session_key)
+
     file_content = "WEBVTT\n\n"
+
     for index, cue in enumerate(author_track):
         file_content += f"{index + 1}\n"
-        file_content += f"{int(cue.start_seconds // 3600):02d}:{int((cue.start_seconds % 3600) // 60):02d}:{cue.start_seconds % 60:06.3f} --> {int(cue.end_seconds // 3600):02d}:{int((cue.end_seconds % 3600) // 60):02d}:{cue.end_seconds % 60:06.3f}\n"
+        file_content += (
+            f"{int(cue.start_seconds // 3600):02d}:"
+            f"{int((cue.start_seconds % 3600) // 60):02d}:"
+            f"{cue.start_seconds % 60:06.3f} --> "
+            f"{int(cue.end_seconds // 3600):02d}:"
+            f"{int((cue.end_seconds % 3600) // 60):02d}:"
+            f"{cue.end_seconds % 60:06.3f}\n"
+        )
         file_content += f"{cue.text}\n\n"
+
     return Response(file_content, status=200)
