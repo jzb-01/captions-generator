@@ -85,6 +85,10 @@ def add_cue(request):
 
     request_id = uuid.uuid4().hex[:8]
 
+    print("SESSION COOKIE:", request.COOKIES.get("sessionid"))
+    print("SESSION KEY BEFORE:", request.session.session_key)
+    print("SESSION EXISTS IN DB:", Session.objects.filter(session_key=request.COOKIES.get("sessionid")).exists())
+
     print(f"\n========== ADD_CUE [{request_id}] ==========")
 
     cookie_session = request.COOKIES.get("sessionid")
