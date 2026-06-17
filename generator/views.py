@@ -4,11 +4,16 @@ from .serializers import temporary_table_serializer
 from django.contrib.sessions.models import Session
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+import uuid
 
 def set_interface(request):
 
-    print("\n========== SET_INTERFACE ==========")
+    request_id = uuid.uuid4().hex[:8]
 
+    print(f"\n========== SET_INTERFACE [{request_id}] ==========")
+
+    print("USER AGENT:", request.headers.get("User-Agent"))
+    print("HOST:", request.get_host())
     print("COOKIE SESSIONID:", request.COOKIES.get("sessionid"))
     print("SESSION KEY BEFORE:", request.session.session_key)
 
@@ -24,7 +29,6 @@ def set_interface(request):
     ).exists()
 
     print("SESSION ROW EXISTS:", session_exists)
-
     print("SESSION COUNT:", Session.objects.count())
 
     track = TemporaryTrack.objects.filter(
@@ -44,9 +48,7 @@ def set_interface(request):
         )
     )
 
-    print("========== END SET_INTERFACE ==========\n")
-
-    return render(
+    response = render(
         request,
         "generator/generator.html",
         {
@@ -55,19 +57,43 @@ def set_interface(request):
         },
     )
 
+    print("RESPONSE COOKIES:", response.cookies)
+    print(f"========== END SET_INTERFACE [{request_id}] ==========\n")
+
+    return response
+
+
+from django.contrib.sessions.models import Session
+import uuid
 
 @api_view(["POST"])
 def add_cue(request):
 
-    print("\n========== ADD_CUE ==========")
+    request_id = uuid.uuid4().hex[:8]
+
+    print(f"\n========== ADD_CUE [{request_id}] ==========")
 
     cookie_session = request.COOKIES.get("sessionid")
+
+    print("USER AGENT:", request.headers.get("User-Agent"))
+    print("HOST:", request.get_host())
 
     print("COOKIE SESSIONID:", cookie_session)
     print("SESSION KEY:", request.session.session_key)
     print("SESSION DATA:", dict(request.session))
 
+    print(
+        "ALL SESSION KEYS IN DB:",
+        list(
+            Session.objects.values_list(
+                "session_key",
+                flat=True
+            )[:20]
+        )
+    )
+
     if cookie_session:
+
         cookie_session_exists = Session.objects.filter(
             session_key=cookie_session
         ).exists()
@@ -102,7 +128,7 @@ def add_cue(request):
 
             print("NEW CUE CREATED:", new_cue.id)
 
-            print("========== END ADD_CUE ==========\n")
+            print(f"========== END ADD_CUE [{request_id}] ==========\n")
 
             return Response(
                 {"id": new_cue.id},
@@ -111,7 +137,7 @@ def add_cue(request):
 
         print("SERIALIZER ERRORS:", serializer.errors)
 
-        print("========== END ADD_CUE ==========\n")
+        print(f"========== END ADD_CUE [{request_id}] ==========\n")
 
         return Response(
             serializer.errors,
@@ -131,7 +157,7 @@ def add_cue(request):
             else False
         )
 
-        print("========== END ADD_CUE ==========\n")
+        print(f"========== END ADD_CUE [{request_id}] ==========\n")
 
         raise
     
