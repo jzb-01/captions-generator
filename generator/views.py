@@ -12,6 +12,11 @@ def set_interface(request):
 
     print("METHOD:", request.method)
 
+    if request.method != "GET":
+        print("IGNORING NON-GET REQUEST")
+    if request.headers.get("User-Agent", "").startswith("Mozilla"):
+        print("***** REAL BROWSER REQUEST *****")
+
     print(f"\n========== OLD PRINT SET_INTERFACE [{request_id}] ==========")
 
     print("USER AGENT:", request.headers.get("User-Agent"))
