@@ -10,12 +10,19 @@ def set_interface(request):
 
     request_id = uuid.uuid4().hex[:8]
 
-    print(f"\n========== SET_INTERFACE [{request_id}] ==========")
+    print("METHOD:", request.method)
+
+    print(f"\n========== OLD PRINT SET_INTERFACE [{request_id}] ==========")
 
     print("USER AGENT:", request.headers.get("User-Agent"))
     print("HOST:", request.get_host())
     print("COOKIE SESSIONID:", request.COOKIES.get("sessionid"))
     print("SESSION KEY BEFORE:", request.session.session_key)
+
+    print("\n========== NEW PRINT SET_INTERFACE ==========")
+    print("METHOD:", request.method)
+    print("USER AGENT:", request.headers.get("User-Agent"))
+    print("COOKIE SESSIONID:", request.COOKIES.get("sessionid"))
 
     if not request.session.session_key:
         print("CREATING SESSION...")
@@ -47,6 +54,8 @@ def set_interface(request):
             "text",
         )
     )
+    print("SESSION MODIFIED:", request.session.modified)
+    print("SESSION IS EMPTY:", request.session.is_empty())
 
     response = render(
         request,
