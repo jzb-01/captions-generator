@@ -18,11 +18,17 @@ def set_interface (request):
 
 @api_view(['POST'])
 def add_cue(request):
+    print("COOKIE SESSIONID:", request.COOKIES.get("sessionid"))
+    print("SESSION KEY:", request.session.session_key)
+    print("SESSION DATA:", dict(request.session))
+
     try:
         serializer = temporary_table_serializer(data=request.data)
 
         if serializer.is_valid():
             author_id = request.session.session_key
+            print("AUTHOR ID:", author_id)
+
             new_cue = serializer.save(author_id=author_id)
             return Response({'id': new_cue.id}, status=201)
 
