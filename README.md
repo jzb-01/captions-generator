@@ -1,4 +1,4 @@
-# Video Caption Editor
+# Captions Generator
 
 > A full-stack web application for creating, editing, and exporting WebVTT caption files directly in the browser — built with Django REST Framework and vanilla JavaScript.
 
@@ -8,7 +8,7 @@
 
 ## 🚀 Live Demo & Visuals
 
-- **Application Link:** _(Add your deployment URL here)_
+- **Application Link:** https://captions-generator-p8kr.onrender.com
 
 ### App Preview
 
@@ -26,10 +26,12 @@
 
 Manually writing WebVTT caption files is tedious, error-prone, and disconnected from the actual video content. This project provides an integrated captioning workspace where users can upload a video, create timestamped cues while watching, and export a standards-compliant `.vtt` file — all without leaving the browser.
 
+Videos remain entirely on the client side and are loaded through the browser's File API. Only caption metadata is persisted on the server, reducing bandwidth requirements and simplifying deployment.
+
 ### System Capabilities
 
-- **Drag-and-Drop Video Upload:** Accepts any browser-supported video format via file input or drag-and-drop.
-- **Visual Cue Timeline:** Cues are rendered as native HTML5 `VTTCue` objects on the video's text track, providing immediate visual feedback.
+- **Drag-and-Drop Video Upload:** Accepts any video format supported by the user's browser.
+- **Real-Time Caption Preview:** Cues are rendered as native HTML5 VTTCue objects on the video's text track, allowing captions to be previewed directly during playback.
 - **Time Input Flexibility:** Manually enter start/end times in hours, minutes, and seconds, or auto-generate 5-second cues from the current playback position.
 - **Cue Card Sidebar:** All cues are displayed as interactive cards with inline delete functionality and single-click selection for editing.
 - **Session-Based Isolation:** Each browser session receives its own set of cues via Django's session framework — no user authentication required.
@@ -39,14 +41,14 @@ Manually writing WebVTT caption files is tedious, error-prone, and disconnected 
 
 ## 🛠️ Technology Stack
 
-| Layer                      | Technologies & Libraries Used                |
-| :------------------------- | :------------------------------------------- |
-| **Frontend UI**            | Vanilla JavaScript (ES Modules), HTML5, CSS3 |
-| **Frontend Notifications** | Toastify.js                                  |
-| **Backend API**            | Django REST Framework                        |
-| **Database**               | PostgreSQL (with Django ORM)                 |
-| **Session Management**     | Django Sessions                              |
-| **Serialization**          | Django REST Framework Serializers            |
+| Layer                      | Technologies & Libraries Used                                   |
+| :------------------------- | :-------------------------------------------------------------- |
+| **Frontend UI**            | Vanilla JavaScript (ES Modules), HTML5, CSS3                    |
+| **Frontend Notifications** | Toastify.js                                                     |
+| **Backend API**            | Django REST Framework                                           |
+| **Database**               | PostgreSQL (production), SQLite (local development), Django ORM |
+| **Session Management**     | Django Sessions                                                 |
+| **Serialization**          | Django REST Framework Serializers                               |
 
 ---
 
@@ -63,9 +65,9 @@ User Creates/Edits Cues via UI
        ↓
 REST API Calls (POST/PATCH/DELETE)
        ↓
-Django Views → Serializer Validation
+Django Views → Data Serialization
        ↓
-PostgreSQL Database (TemporaryTrack Model)
+PostgreSQL / SQLite Database (TemporaryTrack Model)
        ↓
 WebVTT File Generation (GET /api/format_file/)
        ↓
@@ -97,13 +99,13 @@ Each cue is stored as a row in the `TemporaryTrack` table, scoped to an anonymou
 
 ## 🔌 API Endpoints
 
-| Method   | Endpoint                | Description                                      |
-| -------- | ----------------------- | ------------------------------------------------ |
-| `GET`    | `/`                     | Serves the editor interface with existing cues.  |
-| `POST`   | `/api/add_cue/`         | Creates a new blank cue from current video time. |
-| `PATCH`  | `/api/save_cue/<id>/`   | Updates an existing cue's text and timestamps.   |
-| `DELETE` | `/api/delete_cue/<id>/` | Removes a cue from the database.                 |
-| `GET`    | `/api/format_file/`     | Generates and returns a WebVTT-formatted file.   |
+| Method   | Endpoint                | Description                                                  |
+| -------- | ----------------------- | ------------------------------------------------------------ |
+| `GET`    | `/`                     | Serves the editor interface with existing cues.              |
+| `POST`   | `/api/add_cue/`         | Creates a new cue using caption data supplied by the client. |
+| `PATCH`  | `/api/save_cue/<id>/`   | Updates an existing cue's text and timestamps.               |
+| `DELETE` | `/api/delete_cue/<id>/` | Removes a cue from the database.                             |
+| `GET`    | `/api/format_file/`     | Returns WebVTT-formatted content for browser download.       |
 
 ### WebVTT Export Format
 
@@ -128,7 +130,7 @@ Timestamps follow the `HH:MM:SS.mmm` format with zero-padded hours and minutes.
 ## 📂 Project Structure
 
 ```text
-video-caption-editor/
+captions-generator/
 ├── assets/
 │   ├── architecture.png        # System architecture diagram
 │   ├── upload.png              # Upload screen screenshot
@@ -167,7 +169,7 @@ Follow these steps to clone the project, configure dependencies, and run the dev
 
 ```bash
 git clone https://github.com/jzb-01/captions-generator.git
-cd video-caption-editor
+cd captions-generator
 
 python -m venv venv
 
@@ -185,14 +187,15 @@ python manage.py runserver
 
 Once running, open your web browser and navigate to: `http://127.0.0.1:8000/`
 
+The project uses PostgreSQL in production (Render) and automatically falls back to SQLite for local development when DATABASE_URL is not configured.
+
 ---
 
 ## 💡 Technical Challenges
 
 - **Session-Based Data Isolation Without Authentication:** Implementing anonymous cue ownership using Django's session framework. Each browser session receives a unique `session_key` used as the `author_id`, allowing multiple simultaneous users without accounts or login flows.
-- **Frontend-Backend State Synchronization:** Keeping the JavaScript `cuesRecord` array, the DOM card sidebar, the HTML5 `VTTCue` text track, and the server-side database all in sync required careful orchestration across async fetch calls — particularly during rapid cue creation and deletion.
 - **WebVTT Timestamp Formatting:** Converting between user-friendly `HH:MM:SS` input fields and the `HH:MM:SS.mmm` format required by the WebVTT specification, including proper zero-padding, float precision handling, and video duration boundary validation.
-- **Optimistic UI Updates with Error Recovery:** The frontend optimistically updates local state before awaiting server confirmation. If the API call fails, the error is surfaced via Toastify notifications without corrupting the database or requiring a full page reload.
+- **Frontend-Backend State Synchronization:** Keeping the JavaScript state, DOM sidebar, HTML5 VTTCue track, and database synchronized across asynchronous API operations required careful coordination during cue creation, updates, and deletion.
 - **CSRF Protection in AJAX Calls:** All mutating fetch requests require Django's CSRF token, extracted from browser cookies and attached as a custom header — a common pain point in Django + vanilla JS stacks.
 
 ---
@@ -204,8 +207,8 @@ Through designing and developing this project, I gained practical, hands-on expe
 - **Full-Stack Django Development:** Building RESTful API endpoints with Django REST Framework, including serializers, partial updates (PATCH), and session-scoped querysets.
 - **Vanilla JavaScript Application Architecture:** Structuring a non-framework frontend with event delegation, DOM manipulation, module scripts, and async/await API communication patterns.
 - **HTML5 Video API Integration:** Programmatically managing `VTTCue` objects on `TextTrack` elements, controlling track visibility modes, and synchronizing playback position with editor state.
-- **WebVTT Specification Compliance:** Generating standards-compliant caption files with proper header formatting, cue numbering, and millisecond-precision timestamps.
-- **CSRF Security Patterns:** Handling cross-site request forgery protection in single-page applications using cookie extraction and custom request headers.
+- **WebVTT File Generation:** Generating valid caption files with proper header formatting, cue numbering, and millisecond-precision timestamps.
+- **CSRF Security Patterns:** Handling cross-site request forgery protection in JavaScript-enhanced web applications using cookie extraction and custom request headers.
 - **UI State Management:** Maintaining consistent visual states across loading, disabled, error, and success conditions using CSS class toggling and toast notifications.
 
 ---
@@ -225,4 +228,4 @@ Through designing and developing this project, I gained practical, hands-on expe
 
 - **License:** Distributed under the MIT License. See `LICENSE` for details.
 - **Author:** Jordan Zarate
-- **Repository:** https://github.com/jzb-01/captions-generator.git
+- **Repository:** https://github.com/jzb-01/captions-generator
