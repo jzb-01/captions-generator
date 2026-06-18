@@ -11,10 +11,6 @@ from .serializers import temporary_table_serializer
 # ------------------------------------------------------
 
 def get_or_create_session_key(request):
-    """
-    Ensures session_key always exists.
-    Django only assigns session_key after session is saved/created.
-    """
     if not request.session.session_key:
         request.session.create()
     return request.session.session_key
