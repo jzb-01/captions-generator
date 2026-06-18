@@ -18,3 +18,6 @@ media/
 
 # Mac
 .DS_Store
+
+# Database
+db.sqlite3

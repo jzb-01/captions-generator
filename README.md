@@ -44,7 +44,7 @@ Manually writing WebVTT caption files is tedious, error-prone, and disconnected 
 | **Frontend UI**            | Vanilla JavaScript (ES Modules), HTML5, CSS3 |
 | **Frontend Notifications** | Toastify.js                                  |
 | **Backend API**            | Django REST Framework                        |
-| **Database**               | SQLite (with Django ORM)                     |
+| **Database**               | PostgreSQL (with Django ORM)                 |
 | **Session Management**     | Django Sessions                              |
 | **Serialization**          | Django REST Framework Serializers            |
 
@@ -65,7 +65,7 @@ REST API Calls (POST/PATCH/DELETE)
        ↓
 Django Views → Serializer Validation
        ↓
-SQLite Database (TemporaryTrack Model)
+PostgreSQL Database (TemporaryTrack Model)
        ↓
 WebVTT File Generation (GET /api/format_file/)
        ↓
@@ -134,7 +134,9 @@ video-caption-editor/
 │   ├── upload.png              # Upload screen screenshot
 │   └── editor.png              # Editor view screenshot
 │
-├── generator/
+├── captions_generator/         # Django project package (settings, root URL config, WSGI)
+│
+├── generator/                  # Main Django app
 │   ├── templates/
 │   │   └── generator/
 │   │       └── generator.html  # Main editor template
@@ -146,17 +148,13 @@ video-caption-editor/
 │   │           └── generator.js # Frontend application logic
 │   ├── views.py                # View functions and API endpoints
 │   ├── models.py               # TemporaryTrack database model
-│   ├── serializers.py          # DRF serializer (not shown, inferred)
-│   └── urls.py                 # URL routing (not shown, inferred)
-│
-├── project/
-│   ├── settings.py             # Django project settings
-│   ├── urls.py                 # Root URL configuration
-│   └── wsgi.py                 # WSGI entry point
+│   ├── serializers.py          # DRF serializer
+│   └── urls.py                 # App URL routing
 │
 ├── .gitignore                  # Git ignore rules
 ├── LICENSE                     # MIT license
 ├── README.md                   # Project documentation
+├── build.sh                    # Deployment build script
 ├── manage.py                   # Django management script
 └── requirements.txt            # Python dependencies
 ```
@@ -168,7 +166,7 @@ video-caption-editor/
 Follow these steps to clone the project, configure dependencies, and run the development server locally.
 
 ```bash
-git clone https://github.com/your-username/video-caption-editor.git
+git clone https://github.com/jzb-01/captions-generator.git
 cd video-caption-editor
 
 python -m venv venv
@@ -185,7 +183,7 @@ python manage.py migrate
 python manage.py runserver
 ```
 
-Once running, open your web browser and navigate to: `http://localhost:8000`
+Once running, open your web browser and navigate to: `http://127.0.0.1:8000/`
 
 ---
 
@@ -226,5 +224,5 @@ Through designing and developing this project, I gained practical, hands-on expe
 ## 📄 License & Author
 
 - **License:** Distributed under the MIT License. See `LICENSE` for details.
-- **Author:** _(Your Name Here)_
-- **Repository:** _(Add your GitHub repository URL here)_
+- **Author:** Jordan Zarate
+- **Repository:** https://github.com/jzb-01/captions-generator.git
